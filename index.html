@@ -1,1 +1,620 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayTube</title>
+    <style>
+        /* --- GENEL TASARIM VE DEĞİŞKENLER --- */
+        :root {
+            --bg-color: #0f0f0f;
+            --surface-color: #212121;
+            --hover-color: #3d3d3d;
+            --text-primary: #f1f1f1;
+            --text-secondary: #aaaaaa;
+            --accent-color: #3ea6ff;
+            --youtube-red: #ff0000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* --- ÜST MENÜ (HEADER) --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 24px;
+            background-color: var(--bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+            letter-spacing: -1px;
+        }
+        .logo span {
+            background-color: var(--youtube-red);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 8px;
+            margin-left: 5px;
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            flex: 0 1 600px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 20px 0 0 20px;
+            border: 1px solid #303030;
+            background: #121212;
+            color: white;
+            outline: none;
+            font-size: 16px;
+        }
+        .search-input:focus {
+            border: 1px solid #1c62b9;
+        }
+        .search-btn {
+            padding: 10px 20px;
+            border-radius: 0 20px 20px 0;
+            border: 1px solid #303030;
+            border-left: none;
+            background: #222222;
+            color: white;
+            cursor: pointer;
+        }
+        .login-btn {
+            background-color: transparent;
+            color: var(--accent-color);
+            border: 1px solid #303030;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .login-btn:hover {
+            background-color: rgba(62, 166, 255, 0.1);
+            border-color: transparent;
+        }
+
+        /* --- ÇEREZ POLİTİKASI (COOKIE BANNER) --- */
+        #cookie-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--surface-color);
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 2000;
+            border: 1px solid #333;
+            text-align: center;
+            max-width: 500px;
+        }
+        .cookie-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-accept {
+            background-color: var(--text-primary);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-info {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--text-primary);
+            padding: 10px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* --- ANA SAYFA (GRID) --- */
+        .container {
+            padding: 24px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            row-gap: 40px;
+        }
+        .video-card {
+            cursor: pointer;
+        }
+        .thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            object-fit: cover;
+            transition: 0.2s;
+        }
+        .video-card:hover .thumbnail {
+            border-radius: 0;
+        }
+        .video-info {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #555;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        .title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        .channel-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .channel-name:hover {
+            color: var(--text-primary);
+        }
+        .views-date {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* --- VİDEO İZLEME SAYFASI --- */
+        #player-view {
+            display: none;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .iframe-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+        }
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .player-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .player-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .channel-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-subscribe {
+            background-color: var(--text-primary);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-action {
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-action:hover {
+            background-color: var(--hover-color);
+        }
+
+        /* --- KANAL SAYFASI --- */
+        #channel-view {
+            display: none;
+        }
+        .channel-banner {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(90deg, #1c62b9, #ff0000);
+            object-fit: cover;
+        }
+        .channel-header {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            gap: 20px;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        .channel-avatar-large {
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            background-color: #555;
+        }
+        .channel-info h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .channel-stats {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        .channel-tabs {
+            display: flex;
+            gap: 30px;
+            border-bottom: 1px solid #333;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .tab {
+            padding: 15px 0;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+            position: relative;
+        }
+        .tab.active {
+            color: var(--text-primary);
+        }
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--text-primary);
+            border-radius: 3px 3px 0 0;
+        }
+        .channel-content {
+            max-width: 1280px;
+            margin: 24px auto;
+            padding: 0 24px;
+        }
+        .empty-state {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 50px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ÜST MENÜ -->
+    <header>
+        <div class="logo-container" onclick="goHome()">
+            <div class="logo">Play<span>Tube</span></div>
+        </div>
+        <div class="search-box">
+            <input type="text" class="search-input" placeholder="Ara">
+            <button class="search-btn">🔍</button>
+        </div>
+        <button class="login-btn" onclick="devAlert('Oturum Açma')">
+            👤 Oturum Aç
+        </button>
+    </header>
+
+    <!-- ÇEREZ POLİTİKASI (Sadece Kabul Et ve Hakkında) -->
+    <div id="cookie-banner">
+        <p>Deneyiminizi geliştirmek ve size özel içerikler (algoritma önerileri) sunmak için çerezleri kullanıyoruz.</p>
+        <div class="cookie-buttons">
+            <button class="btn-info" onclick="showCookieInfo()">Çerezler Hakkında</button>
+            <button class="btn-accept" onclick="acceptCookies()">Kabul Et</button>
+        </div>
+    </div>
+
+    <!-- ANA SAYFA -->
+    <main id="home-view" class="container">
+        <div class="grid" id="video-grid">
+            <!-- Videolar JS ile buraya basılacak -->
+        </div>
+    </main>
+
+    <!-- VİDEO İZLEME SAYFASI -->
+    <section id="player-view">
+        <div class="iframe-container" id="player-container"></div>
+        <div class="player-title" id="p-title"></div>
+        <div class="player-actions">
+            <div class="channel-block">
+                <img src="" class="avatar" id="p-avatar" onclick="openChannelFromPlayer()">
+                <div style="cursor: pointer;" onclick="openChannelFromPlayer()">
+                    <div style="font-weight: bold; font-size: 16px;" id="p-channel"></div>
+                    <div style="font-size: 12px; color: var(--text-secondary);" id="p-subs"></div>
+                </div>
+                <button class="btn-subscribe" onclick="devAlert('Abone Ol')">Abone Ol</button>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action" onclick="devAlert('Beğeni (Oturum Gerektirir)')">👍 Beğen</button>
+                <button class="btn-action" onclick="devAlert('Dislike (Oturum Gerektirir)')">👎</button>
+                <button class="btn-action" onclick="alert('Bağlantı kopyalandı!')">↪ Paylaş</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- KANAL SAYFASI -->
+    <section id="channel-view">
+        <div class="channel-banner"></div>
+        <div class="channel-header">
+            <img src="" class="channel-avatar-large" id="c-avatar">
+            <div class="channel-info">
+                <h1 id="c-name">Kanal Adı</h1>
+                <div class="channel-stats" id="c-handle">@kullaniciadi • 1.2 Mn abone • 45 Video</div>
+                <button class="btn-subscribe" onclick="devAlert('Abone Ol')">Abone Ol</button>
+            </div>
+        </div>
+        
+        <div class="channel-tabs">
+            <div class="tab active" onclick="switchTab('videos', this)">Videolar</div>
+            <div class="tab" onclick="switchTab('shorts', this)">Shorts</div>
+            <div class="tab" onclick="switchTab('community', this)">Gönderiler</div>
+        </div>
+
+        <div class="channel-content" id="channel-content-area">
+            <!-- Kanal içerikleri buraya yüklenecek -->
+        </div>
+    </section>
+
+    <script>
+        // GERÇEK YOUTUBE VİDEOLARI VE GERÇEK BİLGİLERİ
+        const db = [
+            { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give You Up (Official Music Video)", channel: "Rick Astley", views: "1.4 Mr görüntüleme", date: "14 yıl önce", category: "music", avatar: "https://yt3.ggpht.com/ytc/AIdro_k2L0B_mHkH5t4x3X... (Örnek)" },
+            { id: "jNQXAC9IVRw", title: "Me at the zoo", channel: "jawed", views: "315 Mn görüntüleme", date: "19 yıl önce", category: "vlog" },
+            { id: "9bZkp7q19f0", title: "PSY - GANGNAM STYLE(강남스타일) M/V", channel: "officialpsy", views: "5.1 Mr görüntüleme", date: "11 yıl önce", category: "music" },
+            { id: "kJQP7kiw5Fk", title: "Luis Fonsi - Despacito ft. Daddy Yankee", channel: "Luis Fonsi", views: "8.4 Mr görüntüleme", date: "7 yıl önce", category: "music" },
+            { id: "M7lc1UVf-VE", title: "YouTube Developers Live: Embedded Web Player Customization", channel: "YouTube Developers", views: "1.2 Mn görüntüleme", date: "10 yıl önce", category: "tech" },
+            { id: "Wq5W5B_iH_o", title: "ÇORUM FK 1-1 KOCAELİSPOR | TRENDYOL 1. LİG", channel: "beIN SPORTS Türkiye", views: "150 B görüntüleme", date: "3 ay önce", category: "football" },
+            { id: "V-_O7nl0Ii0", title: "Adele - Hello", channel: "Adele", views: "3.1 Mr görüntüleme", date: "8 yıl önce", category: "music" },
+            { id: "tPEE9ZwTmy0", title: "Short Film: The Beauty of Nature", channel: "Nature Channel", views: "2 Mn görüntüleme", date: "5 yıl önce", category: "vlog" }
+        ];
+
+        let currentChannelObj = null;
+
+        // Sayfa Yüklendiğinde
+        window.onload = () => {
+            checkCookies();
+            renderVideos(sortVideosByAlgorithm());
+        };
+
+        // --- ÇEREZ VE ALGORİTMA SİSTEMİ ---
+        function checkCookies() {
+            if(localStorage.getItem('cookiesAccepted') === 'true') {
+                document.getElementById('cookie-banner').style.display = 'none';
+            }
+        }
+
+        function acceptCookies() {
+            localStorage.setItem('cookiesAccepted', 'true');
+            document.getElementById('cookie-banner').style.display = 'none';
+        }
+
+        function showCookieInfo() {
+            alert("Çerezler Hakkında:\n\nSadece site içerisindeki izleme geçmişinizi tarayıcınızda (localStorage) tutar. Çerezleri kabul ettiğinizde, en çok izlediğiniz video kategorisi (Müzik, Futbol vb.) tespit edilir ve ana sayfadaki videolar sizin zevkinize göre sıralanır. Oturum gerektirmeyen tamamen anonim bir sistemdir.");
+        }
+
+        function sortVideosByAlgorithm() {
+            let sortedVideos = [...db];
+            // Eğer çerezler kabul edildiyse kullanıcının en son izlediği kategoriye göre sırala
+            if (localStorage.getItem('cookiesAccepted') === 'true') {
+                const favoriteCategory = localStorage.getItem('favoriteCategory');
+                if (favoriteCategory) {
+                    sortedVideos.sort((a, b) => {
+                        if (a.category === favoriteCategory && b.category !== favoriteCategory) return -1;
+                        if (a.category !== favoriteCategory && b.category === favoriteCategory) return 1;
+                        return 0;
+                    });
+                }
+            }
+            return sortedVideos;
+        }
+
+        // --- RENDER (EKRANA BASTIRMA) İŞLEMLERİ ---
+        function renderVideos(videoArray) {
+            const grid = document.getElementById('video-grid');
+            grid.innerHTML = '';
+            videoArray.forEach(vid => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                // Gerçek kapak fotoğraflarını çekiyoruz
+                const thumbUrl = `https://i.ytimg.com/vi/${vid.id}/hqdefault.jpg`;
+                
+                card.innerHTML = `
+                    <img src="${thumbUrl}" class="thumbnail" onclick="playVideo('${vid.id}')">
+                    <div class="video-info">
+                        <img src="https://ui-avatars.com/api/?name=${vid.channel}&background=random&color=fff" class="avatar" onclick="openChannel('${vid.channel}')">
+                        <div>
+                            <div class="title" onclick="playVideo('${vid.id}')">${vid.title}</div>
+                            <div class="channel-name" onclick="openChannel('${vid.channel}')">${vid.channel}</div>
+                            <div class="views-date">${vid.views} • ${vid.date}</div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- SAYFA GEÇİŞLERİ ---
+        function hideAllViews() {
+            document.getElementById('home-view').style.display = 'none';
+            document.getElementById('player-view').style.display = 'none';
+            document.getElementById('channel-view').style.display = 'none';
+            document.getElementById('player-container').innerHTML = ''; // İframe durdur
+        }
+
+        function goHome() {
+            hideAllViews();
+            renderVideos(sortVideosByAlgorithm()); // Algoritmayı yeniden çalıştırıp ana sayfaya dön
+            document.getElementById('home-view').style.display = 'block';
+        }
+
+        function playVideo(id) {
+            const vid = db.find(v => v.id === id);
+            if(!vid) return;
+
+            // Algoritmayı Eğit (Çerez onayı varsa)
+            if (localStorage.getItem('cookiesAccepted') === 'true') {
+                localStorage.setItem('favoriteCategory', vid.category);
+            }
+
+            hideAllViews();
+            currentChannelObj = vid; // Kanal sayfasına geçiş için hafızada tut
+
+            document.getElementById('player-container').innerHTML = `
+                <iframe src="https://www.youtube.com/embed/${id}?autoplay=1" allow="autoplay; encrypted-media; fullscreen"></iframe>
+            `;
+            document.getElementById('p-title').innerText = vid.title;
+            document.getElementById('p-channel').innerText = vid.channel;
+            document.getElementById('p-subs').innerText = "1.2 Mn abone";
+            document.getElementById('p-avatar').src = `https://ui-avatars.com/api/?name=${vid.channel}&background=random&color=fff`;
+
+            document.getElementById('player-view').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function openChannelFromPlayer() {
+            if(currentChannelObj) openChannel(currentChannelObj.channel);
+        }
+
+        // --- KANAL SAYFASI SİSTEMİ ---
+        function openChannel(channelName) {
+            hideAllViews();
+            
+            // Kanal Bilgilerini Doldur
+            document.getElementById('c-name').innerText = channelName;
+            const safeHandle = channelName.replace(/\s+/g, '').toLowerCase();
+            document.getElementById('c-handle').innerText = `@${safeHandle} • 1.2 Mn abone • 45 Video`;
+            document.getElementById('c-avatar').src = `https://ui-avatars.com/api/?name=${channelName}&background=random&color=fff`;
+
+            // Videolar sekmesini aktif et
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.tab').classList.add('active');
+            
+            // Kanala ait videoları filtrele
+            const channelVideos = db.filter(v => v.channel === channelName);
+            loadChannelVideos(channelVideos);
+
+            document.getElementById('channel-view').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function switchTab(tabName, element) {
+            // Aktif sekme css ayarı
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            element.classList.add('active');
+
+            const contentArea = document.getElementById('channel-content-area');
+            
+            if (tabName === 'videos') {
+                const channelName = document.getElementById('c-name').innerText;
+                const channelVideos = db.filter(v => v.channel === channelName);
+                loadChannelVideos(channelVideos);
+            } 
+            else if (tabName === 'shorts') {
+                contentArea.innerHTML = `<div class="empty-state">Bu kanalda henüz Shorts videosu bulunmuyor.</div>`;
+            } 
+            else if (tabName === 'community') {
+                contentArea.innerHTML = `<div class="empty-state">Topluluk gönderileri yapım aşamasındadır (Oturum gerektirir).</div>`;
+            }
+        }
+
+        function loadChannelVideos(videos) {
+            const contentArea = document.getElementById('channel-content-area');
+            if(videos.length === 0) {
+                contentArea.innerHTML = `<div class="empty-state">Bu kanalda hiç video yok.</div>`;
+                return;
+            }
+
+            let html = `<div class="grid">`;
+            videos.forEach(vid => {
+                html += `
+                    <div class="video-card" onclick="playVideo('${vid.id}')">
+                        <img src="https://i.ytimg.com/vi/${vid.id}/hqdefault.jpg" class="thumbnail">
+                        <div class="video-info">
+                            <div>
+                                <div class="title">${vid.title}</div>
+                                <div class="views-date">${vid.views} • ${vid.date}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            contentArea.innerHTML = html;
+        }
+
+        // Uyarılar
+        function devAlert(feature) {
+            alert(`🚧 YAPIM AŞAMASINDA 🚧\n\n'${feature}' özelliği geliştirilmektedir. Lütfen daha sonra tekrar deneyin.`);
+        }
+    </script>
+</body>
+</html>
 
