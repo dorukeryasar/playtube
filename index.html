@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayTube - Video Portalı</title>
+    <style>
+        /* Genel Tasarım Ayarları (Karanlık Tema) */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #0f0f0f;
+            color: #ffffff;
+        }
+
+        /* Üst Menü (Header) */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background-color: #202020;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 26px;
+            font-weight: 900;
+            color: #ff0000;
+            cursor: pointer;
+            letter-spacing: -1px;
+        }
+        .search-bar {
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: 1px solid #303030;
+            background: #121212;
+            color: white;
+            width: 350px;
+            outline: none;
+        }
+        .search-bar:focus {
+            border-color: #3ea6ff;
+        }
+        .login-btn {
+            background-color: transparent;
+            color: #3ea6ff;
+            border: 1px solid #3ea6ff;
+            padding: 8px 18px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.3s;
+        }
+        .login-btn:hover {
+            background-color: #3ea6ff;
+            color: #0f0f0f;
+        }
+
+        /* Ana Sayfa Video Grid Düzeni */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 25px;
+        }
+        .card {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: scale(1.02);
+        }
+        .card img {
+            width: 100%;
+            border-radius: 12px;
+            object-fit: cover;
+            aspect-ratio: 16/9;
+        }
+        .card-info {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .card-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #555;
+        }
+        .card-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: bold;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-channel {
+            font-size: 13px;
+            color: #aaaaaa;
+            margin-top: 4px;
+        }
+
+        /* Video Oynatma Sayfası */
+        #video-page {
+            display: none;
+            padding: 25px;
+            max-width: 1100px;
+            margin: auto;
+        }
+        .iframe-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 Oranı */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            background-color: #000;
+        }
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .video-details {
+            margin-top: 20px;
+        }
+        .vid-title-main {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .interaction-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .channel-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .channel-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #fff;
+        }
+        .subscribe-btn {
+            background-color: white;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+        .buttons-section {
+            display: flex;
+            gap: 10px;
+        }
+        .action-btn {
+            background-color: #272727;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .action-btn:hover {
+            background-color: #3f3f3f;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Üst Menü -->
+    <header>
+        <div class="logo" id="home-btn" title="Ana Sayfaya Dön">PlayTube</div>
+        <div>
+            <input type="text" class="search-bar" placeholder="Ara...">
+        </div>
+        <button class="login-btn" onclick="showUnderConstruction('Oturum Açma')">
+            👤 Oturum Aç
+        </button>
+    </header>
+
+    <!-- Ana Sayfa (Videoların Listelendiği Yer) -->
+    <main id="home-page" class="grid">
+        <!-- Videolar JavaScript ile buraya eklenecek -->
+    </main>
+
+    <!-- Video İzleme Sayfası -->
+    <section id="video-page">
+        <div class="iframe-container" id="player-container">
+            <!-- YouTube Player Buraya Gelecek -->
+        </div>
+        <div class="video-details">
+            <div class="vid-title-main" id="vid-title">Video Başlığı Yükleniyor...</div>
+            
+            <div class="interaction-row">
+                <!-- Kanal Bilgileri ve Abone Ol -->
+                <div class="channel-section">
+                    <div class="channel-avatar"></div>
+                    <div>
+                        <div style="font-weight: bold; font-size: 16px;" id="vid-channel">Kanal Adı</div>
+                        <div style="font-size: 12px; color: #aaa;">1.2 Mn Abone</div>
+                    </div>
+                    <button class="subscribe-btn" onclick="showUnderConstruction('Abone Olma')">Abone Ol</button>
+                </div>
+
+                <!-- Like ve Paylaş Butonları -->
+                <div class="buttons-section">
+                    <button class="action-btn" onclick="showUnderConstruction('Beğeni Sistemi')">
+                        👍 Beğen
+                    </button>
+                    <button class="action-btn" onclick="showUnderConstruction('Dislike Sistemi')">
+                        👎
+                    </button>
+                    <button class="action-btn" onclick="shareVideo()">
+                        ↪ Paylaş
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Örnek Video Veritabanı
+        const videos = [
+            { id: "dQw4w9WgXcQ", title: "Örnek Video 1 - Tam Ekran Müzik", channel: "Müzik Kanalı" },
+            { id: "jNQXAC9IVRw", title: "Me at the zoo - YouTube'un İlk Videosu", channel: "jawed" },
+            { id: "kJQP7kiw5Fk", title: "Eğlenceli İçerikler ve Vlog", channel: "Vlog Dünyası" },
+            { id: "9bZkp7q19f0", title: "Trend Olan Dans Videosu", channel: "Trendler" },
+            { id: "tPEE9ZwTmy0", title: "Kısa Film: Doğa ve Huzur", channel: "Sinema Kulübü" },
+            { id: "LXb3EKWsInQ", title: "4K Okyanus Belgeseli Görüntüleri", channel: "Doğa Belgeselleri" }
+        ];
+
+        const homePage = document.getElementById('home-page');
+        const videoPage = document.getElementById('video-page');
+        const playerContainer = document.getElementById('player-container');
+        const vidTitle = document.getElementById('vid-title');
+        const vidChannel = document.getElementById('vid-channel');
+        const homeBtn = document.getElementById('home-btn');
+
+        // Ana sayfaya videoları yükle
+        videos.forEach(vid => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img src="https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg" onerror="this.src='https://img.youtube.com/vi/${vid.id}/hqdefault.jpg'" alt="Kapak">
+                <div class="card-info">
+                    <div class="card-avatar"></div>
+                    <div class="card-text">
+                        <div class="card-title">${vid.title}</div>
+                        <div class="card-channel">${vid.channel}</div>
+                        <div class="card-channel" style="font-size: 11px;">102 B Görüntüleme • 1 gün önce</div>
+                    </div>
+                </div>
+            `;
+            card.onclick = () => openVideo(vid);
+            homePage.appendChild(card);
+        });
+
+        // Videoya tıklanınca çalışacak fonksiyon
+        function openVideo(vid) {
+            homePage.style.display = 'none';
+            videoPage.style.display = 'block';
+            window.scrollTo(0, 0);
+            
+            playerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${vid.id}?autoplay=1" allow="autoplay; encrypted-media; fullscreen"></iframe>`;
+            vidTitle.innerText = vid.title;
+            vidChannel.innerText = vid.channel;
+        }
+
+        // Logoya tıklayınca Ana Sayfaya Dön
+        homeBtn.onclick = () => {
+            videoPage.style.display = 'none';
+            homePage.style.display = 'grid';
+            playerContainer.innerHTML = '';
+        }
+
+        // Yapım Aşaması Uyarı Fonksiyonu
+        function showUnderConstruction(featureName) {
+            alert("🚧 YAPIM AŞAMASINDA 🚧\n\n'" + featureName + "' özelliği şu anda geliştirme aşamasındadır. Yakında aktif edilecektir!");
+        }
+
+        // Paylaş Butonu Fonksiyonu
+        function shareVideo() {
+            alert("✅ Video bağlantısı kopyalandı! (Test Aşaması)");
+        }
+    </script>
+</body>
+</html>
