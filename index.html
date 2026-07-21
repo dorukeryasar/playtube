@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortsTube - 4K</title>
+    <style>
+        /* --- GENEL TASARIM VE DEĞİŞKENLER --- */
+        :root {
+            --bg-color: #0f0f0f;
+            --text-color: #ffffff;
+            --accent: #ff0050; /* ShortsTube Özel Kırmızı/Pembe */
+            --glass-bg: rgba(25, 25, 25, 0.85);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); overflow: hidden; } /* Ana sayfada kaydırmayı kapatıyoruz, sadece Shorts kutusu kayacak */
+
+        /* --- ÜST MENÜ VE ARAMA (HEADER) --- */
+        header {
+            position: fixed; top: 0; width: 100%; height: 70px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 20px; background: var(--glass-bg); backdrop-filter: blur(12px);
+            z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* 3D 4K MÜKEMMEL LOGO TASARIMI */
+        .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .logo-svg {
+            width: 45px; height: 45px;
+            filter: drop-shadow(0px 8px 6px rgba(255, 0, 80, 0.4)); /* 3D Gölge */
+        }
+        .logo-text {
+            font-size: 26px; font-weight: 900; letter-spacing: -1px;
+            background: linear-gradient(180deg, #ffffff 30%, #aaaaaa 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+        }
+        .logo-text span {
+            background: linear-gradient(180deg, #ff0050 0%, #aa0030 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Arama Kutusu */
+        .search-box { display: flex; align-items: center; flex: 0 1 400px; }
+        .search-input {
+            width: 100%; padding: 12px 20px; border-radius: 30px; border: 1px solid #333;
+            background: rgba(0,0,0,0.5); color: white; outline: none; transition: 0.3s;
+        }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(255, 0, 80, 0.3); }
+        
+        .login-btn {
+            background: linear-gradient(45deg, #ff0050, #ff4081); border: none;
+            color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(255, 0, 80, 0.4); transition: 0.2s;
+        }
+        .login-btn:hover { transform: scale(1.05); }
+
+        /* --- SHORTS KAYDIRMA ALANI (TIKTOK/SHORTS MANTIĞI) --- */
+        #shorts-container {
+            height: 100vh; width: 100vw;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory; /* Mıknatıs gibi kaydırma */
+            scroll-behavior: smooth;
+        }
+        /* Kaydırma çubuğunu gizle */
+        #shorts-container::-webkit-scrollbar { display: none; }
+
+        .short-wrapper {
+            height: 100vh; width: 100vw;
+            scroll-snap-align: start; /* Her video tam ekrana oturur */
+            display: flex; justify-content: center; align-items: center;
+            position: relative; padding-top: 70px; /* Header boşluğu */
+            background-color: #000;
+        }
+
+        .video-box {
+            position: relative; width: 100%; max-width: 450px; height: 100%; max-height: 800px;
+            background: #111; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        .video-box iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+        /* Iframe üzerine tıklamayı kapatıyoruz ki kendi oynat/durdur sistemimizi yapalım */
+        
+        .click-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; }
+
+        /* --- SAĞ TARAF BUTONLARI (LIKE, YORUM, PAYLAŞ) --- */
+        .side-actions {
+            position: absolute; right: -70px; bottom: 50px;
+            display: flex; flex-direction: column; gap: 20px; z-index: 20;
+        }
+        .action-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; transition: 0.2s; }
+        .action-item:hover { transform: scale(1.1); }
+        .action-btn {
+            width: 50px; height: 50px; background: rgba(30,30,30,0.8);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 20px; color: white; backdrop-filter: blur(5px);
+        }
+        .action-text { font-size: 13px; font-weight: 600; }
+
+        /* --- SOL ALT BİLGİ ALANI (KANAL, BAŞLIK, ABONE OL) --- */
+        .bottom-info {
+            position: absolute; bottom: 20px; left: 15px; right: 15px; z-index: 20;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 20px 10px 10px 10px; border-radius: 10px; pointer-events: none;
+        }
+        .channel-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; pointer-events: auto; cursor: pointer; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; }
+        .channel-name { font-size: 17px; font-weight: bold; }
+        .subscribe-btn {
+            background: white; color: black; border: none; padding: 6px 15px;
+            border-radius: 20px; font-weight: bold; cursor: pointer; margin-left: 10px; pointer-events: auto;
+        }
+        .video-title { font-size: 15px; line-height: 1.4; font-weight: 500; pointer-events: auto; }
+
+        /* --- KANAL SAYFASI (SADECE SHORTS) --- */
+        #channel-view {
+            display: none; height: 100vh; overflow-y: scroll;
+            padding-top: 90px; padding-left: 20px; padding-right: 20px;
+        }
+        .channel-header { display: flex; align-items: center; gap: 25px; margin-bottom: 30px; max-width: 1200px; margin-inline: auto; }
+        .channel-header img { width: 100px; height: 100px; border-radius: 50%; }
+        .channel-stats { margin-top: 5px; color: #aaa; }
+        
+        .shorts-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px; max-width: 1200px; margin: 0 auto 50px auto;
+        }
+        .short-card { cursor: pointer; position: relative; aspect-ratio: 9/16; border-radius: 12px; overflow: hidden; background: #222; transition: 0.2s; }
+        .short-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(255,0,80,0.3); }
+        .short-card img { width: 100%; height: 100%; object-fit: cover; }
+        .short-card-title {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 20px 10px 10px 10px; font-size: 14px; font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ÜST MENÜ & 3D 4K LOGO -->
+    <header>
+        <div class="brand" onclick="goHome()">
+            <!-- SVG İLE YAPILMIŞ ÖZEL 3D 4K SHORTS LOGOSU -->
+            <svg class="logo-svg" viewBox="0 0 100 100">
+                <defs>
+                    <!-- Logo Arka Plan Gradyanı -->
+                    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ff4081;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#ff0050;stop-opacity:1" />
+                    </linearGradient>
+                    <!-- 3D Işık Yansıması (Bevel/Işıltı efekti) -->
+                    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.6" />
+                        <stop offset="40%" style="stop-color:#ffffff;stop-opacity:0" />
+                    </linearGradient>
+                    <!-- İç Gölge (3D Derinlik İçin) -->
+                    <filter id="innerShadow">
+                        <feOffset dx="0" dy="4"/>
+                        <feGaussianBlur stdDeviation="3" result="offset-blur"/>
+                        <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
+                        <feFlood flood-color="black" flood-opacity="0.5" result="color"/>
+                        <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
+                        <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+                    </filter>
+                </defs>
+                <!-- Dış Şekil (Kırmızı Kutu) -->
+                <rect width="100" height="100" rx="30" fill="url(#bgGrad)" filter="url(#innerShadow)" />
+                <!-- Üst 3D Işıltı -->
+                <rect width="100" height="100" rx="30" fill="url(#shine)" />
+                <!-- Beyaz Play/Shorts İkonu (S Harfi ve Play Kombinasyonu) -->
+                <path d="M 40 25 C 25 25 25 50 40 50 C 55 50 55 75 40 75" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+                <polygon points="65,40 65,60 80,50" fill="#ffffff" filter="url(#innerShadow)"/>
+            </svg>
+            <div class="logo-text">Shorts<span>Tube</span></div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="Shorts'larda ara..." onkeyup="searchShorts(event)">
+        </div>
+        
+        <button class="login-btn" onclick="devAlert('Oturum Açma İşlemi')">Oturum Aç</button>
+    </header>
+
+    <!-- SHORTS KAYDIRMA (SWIPE) ALANI -->
+    <main id="shorts-container">
+        <!-- Shorts videoları buraya JavaScript ile eklenecek -->
+    </main>
+
+    <!-- KANAL SAYFASI (SADECE SHORTS) -->
+    <section id="channel-view">
+        <div class="channel-header">
+            <img src="" id="c-avatar">
+            <div>
+                <h1 id="c-name">Kanal Adı</h1>
+                <div class="channel-stats" id="c-stats">@kullaniciadi • 1.5 Mn Abone • 120 Shorts</div>
+                <button class="subscribe-btn" style="margin-left:0; margin-top:10px;" onclick="devAlert('Abone Olma')">Abone Ol</button>
+            </div>
+        </div>
+        <!-- Kanalın SADECE Shorts videoları burada görünecek -->
+        <div class="shorts-grid" id="channel-shorts"></div>
+    </section>
+
+    <script>
+        // ÇÖKMEYEN DAHİLİ SHORTS VERİTABANI (Gerçek YouTube Shorts ID'leri)
+        const db = [
+            { id: "Sq_o_G-m0-s", title: "Kedi ve köpeklerin en komik anları! 🐾", channel: "Sevimli Dostlar", views: "1.2 Mn", likes: "245 B" },
+            { id: "mO3bT13U_Fw", title: "İnanılmaz Futbol Çalımları ve Goller ⚽", channel: "Futbol Shorts", views: "850 B", likes: "120 B" },
+            { id: "z6EchXyiesQ", title: "Minecraft 100 Gün Hardcore (Bölüm 1) ⛏️", channel: "Oyun Dünyası", views: "3.4 Mn", likes: "450 B" },
+            { id: "8p-c9yLhEw0", title: "Yazılımcıların en büyük kabusu... 💻", channel: "Kod Evreni", views: "150 B", likes: "15 B" },
+            { id: "Wq5W5B_iH_o", title: "Çorum FK Muhteşem Gol! 🔥", channel: "Spor Günlüğü", views: "85 B", likes: "8 B" }, // Özelistek üzerine eklendi
+            { id: "tPEE9ZwTmy0", title: "Doğanın en rahatlatıcı manzaraları 🌲", channel: "Doğa Belgeseli", views: "2.1 Mn", likes: "180 B" },
+            { id: "LXb3EKWsInQ", title: "4K Okyanus Altı - Muhteşem Görüntüler 🌊", channel: "Doğa Belgeseli", views: "5.5 Mn", likes: "500 B" },
+            { id: "dQw4w9WgXcQ", title: "Rickroll ama Shorts versiyonu 🎵", channel: "Müzik Efsaneleri", views: "10 Mn+", likes: "1.1 Mn" }
+        ];
+
+        const container = document.getElementById('shorts-container');
+        const channelView = document.getElementById('channel-view');
+
+        window.onload = () => {
+            loadShorts(db); // Açılışta tüm videoları yükle
+        };
+
+        // --- 1. SHORTS YÜKLEME VE EKRANA BASMA ---
+        function loadShorts(videos) {
+            container.innerHTML = ''; // İçeriği temizle
+            
+            if(videos.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding-top:20vh; font-size:20px;">Video bulunamadı.</div>`;
+                return;
+            }
+
+            videos.forEach(vid => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'short-wrapper';
+                
+                // Avatar resmini isme göre otomatik oluşturur
+                const avatarUrl = `https://ui-avatars.com/api/?name=${vid.channel}&background=random&color=fff&size=100`;
+
+                wrapper.innerHTML = `
+                    <div class="video-box">
+                        <!-- YouTube Shorts Player (Sessiz autoplay ile) -->
+                        <iframe src="https://www.youtube.com/embed/${vid.id}?autoplay=1&mute=1&loop=1&controls=0&playlist=${vid.id}" allow="autoplay; encrypted-media"></iframe>
+                        
+                        <!-- Videoyu durdurup oynatmak için görünmez katman -->
+                        <div class="click-layer" onclick="togglePlay(this)"></div>
+
+                        <!-- SAĞ BUTONLAR -->
+                        <div class="side-actions">
+                            <div class="action-item" onclick="devAlert('Beğeni İşlemi')">
+                                <div class="action-btn">👍</div>
+                                <span class="action-text">${vid.likes}</span>
+                            </div>
+                            <div class="action-item" onclick="devAlert('Dislike İşlemi')">
+                                <div class="action-btn">👎</div>
+                                <span class="action-text">Dislike</span>
+                            </div>
+                            <div class="action-item" onclick="devAlert('Yorum Yapma')">
+                                <div class="action-btn">💬</div>
+                                <span class="action-text">Yorum</span>
+                            </div>
+                            <div class="action-item" onclick="alert('Bağlantı Kopyalandı!')">
+                                <div class="action-btn">↪</div>
+                                <span class="action-text">Paylaş</span>
+                            </div>
+                        </div>
+
+                        <!-- SOL ALT BİLGİLER -->
+                        <div class="bottom-info">
+                            <div class="channel-row" onclick="openChannel('${vid.channel}')">
+                                <img src="${avatarUrl}" class="avatar">
+                                <div class="channel-name">@${vid.channel.replace(/\s+/g, '').toLowerCase()}</div>
+                                <button class="subscribe-btn" onclick="event.stopPropagation(); devAlert('Abone Olma');">Abone Ol</button>
+                            </div>
+                            <div class="video-title">${vid.title}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        // --- 2. ARAMA MOTORU SİSTEMİ ---
+        function searchShorts(e) {
+            if(e.key === 'Enter') {
+                const query = e.target.value.toLowerCase();
+                const filtered = db.filter(v => v.title.toLowerCase().includes(query) || v.channel.toLowerCase().includes(query));
+                
+                goHome(); // Kanal sayfasındaysa ana sayfaya dön
+                loadShorts(filtered);
+            }
+        }
+
+        // --- 3. KANAL SAYFASI (SADECE SHORTS GRID) ---
+        function openChannel(channelName) {
+            container.style.display = 'none'; // Ana kaydırmayı gizle
+            
+            document.getElementById('c-name').innerText = channelName;
+            document.getElementById('c-stats').innerText = `@${channelName.replace(/\s+/g, '').toLowerCase()} • Milyonlarca Abone • Sadece Shorts`;
+            document.getElementById('c-avatar').src = `https://ui-avatars.com/api/?name=${channelName}&background=random&color=fff&size=200`;
+
+            const channelVideos = db.filter(v => v.channel === channelName);
+            const grid = document.getElementById('channel-shorts');
+            grid.innerHTML = '';
+
+            channelVideos.forEach(vid => {
+                const card = document.createElement('div');
+                card.className = 'short-card';
+                // Shorts için özel dikey kapak fotoğrafı URL'si (mqdefault veya vi/ID/0.jpg)
+                card.innerHTML = `
+                    <img src="https://i.ytimg.com/vi/${vid.id}/mqdefault.jpg">
+                    <div class="short-card-title">${vid.title}</div>
+                `;
+                // Kanaldaki bir videoya tıklayınca onu ana ekranda oynat
+                card.onclick = () => {
+                    goHome();
+                    loadShorts([vid, ...db.filter(v => v.id !== vid.id)]); // Tıklananı en başa alarak yükle
+                };
+                grid.appendChild(card);
+            });
+
+            channelView.style.display = 'block';
+        }
+
+        function goHome() {
+            channelView.style.display = 'none';
+            container.style.display = 'block';
+            if(container.children.length === 0) loadShorts(db); // Eğer liste boşaldıysa sıfırla
+            window.scrollTo(0, 0);
+        }
+
+        // Fake Play/Pause 
+        function togglePlay(element) {
+            // Iframe'ler API olmadan dışarıdan müdahaleye (play/pause) tam izin vermez.
+            // Bu tıklama katmanı ileride resmi YT Player API eklendiğinde kullanılabilir.
+            devAlert("Video Oynat/Durdur");
+        }
+
+        // --- 4. HATA / YAPIM AŞAMASI UYARILARI ---
+        function devAlert(feature) {
+            alert(`🔒 OTURUM GEREKLİ / YAPIM AŞAMASINDA\n\n'${feature}' özelliğini kullanabilmek için Google hesabınızla oturum açmanız gerekmektedir. ShortsTube şu an bu özelliği yapılandırmaktadır.`);
+        }
+    </script>
+</body>
+</html>
